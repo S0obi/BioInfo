@@ -7,6 +7,6 @@ class TreeExportator:
 
     def export(self):
         with open(self.fileCSV, 'w', newline="") as fList:
-            writer = csv.writer(fList)
+            writer = csv.writer(fList, delimiter=";")
             for e in self.res:
                 writer.writerow(e)

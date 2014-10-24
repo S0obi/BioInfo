@@ -6,6 +6,8 @@ from tkinter.messagebox import showerror, showinfo
 
 from ListComparator import ListComparator
 from ListBioType import ListBioType
+from ListBioA import ListBioA
+from ListBioB import ListBioB
 from TreeExportator import TreeExportator
 
 class BioInfo(Tk):
@@ -55,7 +57,7 @@ class BioInfo(Tk):
         self.typeListStr1 = StringVar(self.frameList1)
         self.typeListStr1.set(str(ListBioType.TypeA))
 
-        self.buttonTypeList1 = OptionMenu(self.frameList1, self.typeListStr1, str(ListBioType.TypeA), str(ListBioType.TypeB), "\t\t\t ").pack(side=LEFT)
+        self.buttonTypeList1 = OptionMenu(self.frameList1, self.typeListStr1, str(ListBioType.TypeA), str(ListBioType.TypeB)).pack(side=LEFT)
 
         self.entrylist1 = Entry(self.frameList1, width=30)
         self.entrylist1.pack(side=LEFT)
@@ -70,7 +72,7 @@ class BioInfo(Tk):
         self.typeListStr2 = StringVar(self.frameList2)
         self.typeListStr2.set(str(ListBioType.TypeB))
 
-        self.buttonTypeList2 = OptionMenu(self.frameList2, self.typeListStr2, str(ListBioType.TypeA), str(ListBioType.TypeB), "\t\t\t ").pack(side=LEFT)
+        self.buttonTypeList2 = OptionMenu(self.frameList2, self.typeListStr2, str(ListBioType.TypeA), str(ListBioType.TypeB)).pack(side=LEFT)
 
         self.entrylist2 = Entry(self.frameList2, width=30)
         self.entrylist2.pack(side=LEFT)
@@ -306,9 +308,7 @@ class BioInfo(Tk):
             except IndexError:
                 showerror("Erreur : liste A ou B invalide", "Le fichier liste A ou B n'est pas un fichier valide")
         else:
-            print("No condition")
-            print(str(self.typeList1))
-            print(str(self.typeList2))
+            showerror("Erreur : Combinaisons de listes invalides", "Votre choix de types de listes ne correspond à aucune combinaison possible, contacter le developpeur")
 
 
     def export(self):
