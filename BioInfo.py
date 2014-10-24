@@ -1,10 +1,11 @@
-from tkinter import Tk, Text, Frame, Toplevel, LabelFrame, Label, Entry, Button, Menubutton
+from tkinter import Tk, Text, Frame, Toplevel, LabelFrame, Label, Entry, Button, OptionMenu, StringVar
 from tkinter import LEFT, RIGHT, BOTTOM, TOP, VERTICAL, X, Y, INSERT, END, DISABLED, NORMAL, FALSE
 from tkinter.ttk import Treeview, Scrollbar
 from tkinter.filedialog import askopenfilename, asksaveasfilename
 from tkinter.messagebox import showerror, showinfo
 
 from ListComparator import ListComparator
+from ListBioType import ListBioType
 from TreeExportator import TreeExportator
 
 class BioInfo(Tk):
@@ -13,6 +14,10 @@ class BioInfo(Tk):
         self.wm_title("BioInfo : comparaison des listes")
         self.resizable(width=FALSE, height=FALSE)
         self.SortDir = False
+
+        # Lists Types
+        self.typeList1 = None
+        self.typeList2 = None
 
         # Frame content
         self.frameContent = Frame(self)
@@ -46,26 +51,32 @@ class BioInfo(Tk):
         #Liste n°1 selection
         self.frameList1 = Frame(self.frameLists)
         self.frameList1.pack()
-        
-        Label(self.frameList1, text="Liste n°1 : ").pack(side=LEFT)
+
+        self.typeListStr1 = StringVar(self.frameList1)
+        self.typeListStr1.set(str(ListBioType.TypeA))
+
+        self.buttonTypeList1 = OptionMenu(self.frameList1, self.typeListStr1, str(ListBioType.TypeA), str(ListBioType.TypeB), "\t\t\t ").pack(side=LEFT)
 
         self.entrylist1 = Entry(self.frameList1, width=30)
         self.entrylist1.pack(side=LEFT)
 
-        self.buttonlist1 = Button(self.frameList1, text="Parcourir", command=self.load_fileList1, width=10)
-        self.buttonlist1.pack(side=LEFT, padx=5)
+        self.buttonBrowseList1 = Button(self.frameList1, text="Parcourir", command=self.load_fileList1, width=10)
+        self.buttonBrowseList1.pack(side=LEFT, padx=5)
 
         # List n°2 selection
         self.frameList2 = Frame(self.frameLists)
         self.frameList2.pack(side=BOTTOM)
 
-        Label(self.frameList2, text="Liste n°2 : ").pack(side=LEFT)
+        self.typeListStr2 = StringVar(self.frameList2)
+        self.typeListStr2.set(str(ListBioType.TypeB))
+
+        self.buttonTypeList2 = OptionMenu(self.frameList2, self.typeListStr2, str(ListBioType.TypeA), str(ListBioType.TypeB), "\t\t\t ").pack(side=LEFT)
 
         self.entrylist2 = Entry(self.frameList2, width=30)
         self.entrylist2.pack(side=LEFT)
 
-        self.buttonlist2 = Button(self.frameList2, text="Parcourir", command=self.load_fileList2, width=10)
-        self.buttonlist2.pack(side=LEFT, padx=5)
+        self.buttonBrowseList2 = Button(self.frameList2, text="Parcourir", command=self.load_fileList2, width=10)
+        self.buttonBrowseList2.pack(side=LEFT, padx=5)
 
         # Form pValue
         self.framePVal = Frame(self.frameForms)
@@ -115,6 +126,8 @@ class BioInfo(Tk):
             self.list1 = fname
             self.entrylist1.insert(0,fname)
 
+            self.buttonComparer.config(state=NORMAL)
+
 
     def load_fileList2(self):
         fname = askopenfilename(filetypes=(("CSV files", "*.csv"),
@@ -144,6 +157,9 @@ class BioInfo(Tk):
         self.entryPVal.delete(0,END)
         self.entryFoldC.delete(0, END)
         self.entryNote.delete(0, END)
+
+        self.typeList1 = None
+        self.typeList2 = None
 
         self.buttonExport.config(state=DISABLED)
         self.buttonComparer.config(state=DISABLED)
@@ -177,6 +193,26 @@ class BioInfo(Tk):
     def compare(self):
         self.buttonExport.config(state=NORMAL)
 
+        # Détermination type Listes
+
+        # List 1
+
+        if self.typeListStr1.get() == str(ListBioType.TypeA):
+            self.typeList1 = ListBioType.TypeA
+        elif self.typeListStr1.get() == str(ListBioType.TypeB):
+            self.typeList1 = ListBioType.TypeB
+        else:
+            self.typeList1 = None
+
+        # List 2
+        if self.typeListStr2.get() == str(ListBioType.TypeA):
+            self.typeList2 = ListBioType.TypeA
+        elif self.typeListStr2.get() == str(ListBioType.TypeB):
+            self.typeList2 = ListBioType.TypeB
+        else:
+            self.typeList2 = None
+
+
         if not self.isValidfoldC(self.entryFoldC.get()) and not self.entryFoldC.get() == "":
             showerror("Erreur : foldC","La valeur fold Change n'est pas un nombre")
 
@@ -186,27 +222,93 @@ class BioInfo(Tk):
         elif not self.isValidNote(self.entryNote.get()) and not self.entryNote.get() == "":
             showerror("Erreur : note", "La valeur note n'est pas un nombre entier")
 
-        elif self.list1 is None and self.list2 is not None:
+        # (List A and No List) or (No List and List A)
+        elif ((self.list1 is not None and self.typeList1 == ListBioType.TypeA) and (self.list2 is None)) or\
+             ((self.list2 is not None and self.typeList2 == ListBioType.TypeA) and (self.list1 is None)):
+
+            self.resetTree()
+
+            try:
+                listComp = ListComparator(self.list1, self.list2, self.entryPVal.get(), self.entryFoldC.get(), self.entryNote.get())
+                for e in listComp.getFilterListA():
+                    self.tree.insert('', 'end', values=e)
+
+            except IndexError:
+                showerror("Erreur : liste A invalide", "Le fichier liste A n'est pas un fichier valide")
+
+
+        # (List B and No List) or (No List and List B)
+        elif ((self.list1 is not None and self.typeList1 == ListBioType.TypeB) and (self.list2 is None)) or\
+             ((self.list2 is not None and self.typeList2 == ListBioType.TypeB) and (self.list1 is None)):
+
             self.resetTree()
 
             try:
                 listComp = ListComparator(self.list1, self.list2, self.entryPVal.get(), self.entryFoldC.get())
-                for e in listComp.getDifflist2():
+                for e in listComp.getFilterListB():
                     self.tree.insert('', 'end', values=e)
             
             except IndexError:
                 showerror("Erreur : liste A invalide", "Le fichier liste A n'est pas un fichier valide")
 
-        else:
+        # (List A and List B) or (List B and List A)
+        elif ((self.list1 is not None and self.typeList1 == ListBioType.TypeA) and \
+             (self.list2 is not None and self.typeList2 == ListBioType.TypeB)) or \
+             ((self.list1 is not None and self.typeList1 == ListBioType.TypeB) and \
+             (self.list2 is not None and self.typeList2 == ListBioType.TypeA)):
+
             self.resetTree()
 
+            listA = ""
+            listB = ""
+            if self.typeList1 == ListBioType.TypeA:
+                listA = self.list1
+            else:
+                listA = self.list2
+
+            if self.typeList1 == ListBioType.TypeB:
+                listB = self.list1
+            else:
+                listB = self.list2
             try:
-                listComp = ListComparator(self.list1, self.list2, self.entryPVal.get(), self.entryFoldC.get(), self.entryNote.get())
-                for e in listComp.getDiff():
+                listComp = ListComparator(listA, listB, self.entryPVal.get(), self.entryFoldC.get(), self.entryNote.get())
+                for e in listComp.getDiffAandB():
                     self.tree.insert('', 'end', values=e)
 
             except IndexError:
                 showerror("Erreur : liste A ou B invalide", "Le fichier liste A ou B n'est pas un fichier valide")
+
+        # (List A and List A)
+        elif ((self.list1 is not None and self.typeList1 == ListBioType.TypeA) and \
+             (self.list2 is not None and self.typeList2 == ListBioType.TypeA)):
+
+            self.resetTree()
+
+            try:
+                listComp = ListComparator(self.list1, self.list2, self.entryPVal.get(), self.entryFoldC.get(), self.entryNote.get())
+                for e in listComp.getDiffAandA():
+                    self.tree.insert('', 'end', values=e)
+
+            except IndexError:
+                showerror("Erreur : liste A ou B invalide", "Le fichier liste A ou B n'est pas un fichier valide")
+
+        # (List B and List B)
+        elif ((self.list1 is not None and self.typeList1 == ListBioType.TypeB) and \
+             (self.list2 is not None and self.typeList2 == ListBioType.TypeB)):
+
+            self.resetTree()
+
+            try:
+                listComp = ListComparator(self.list1, self.list2, self.entryPVal.get(), self.entryFoldC.get())
+                for e in listComp.getDiffBandB():
+                    self.tree.insert('', 'end', values=e)
+
+            except IndexError:
+                showerror("Erreur : liste A ou B invalide", "Le fichier liste A ou B n'est pas un fichier valide")
+        else:
+            print("No condition")
+            print(str(self.typeList1))
+            print(str(self.typeList2))
 
 
     def export(self):

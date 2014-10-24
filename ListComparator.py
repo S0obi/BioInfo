@@ -2,9 +2,9 @@ import csv
 
 class ListComparator:
 
-    def __init__(self, listA, listB, pValLimit, foldCLimit, noteLimit=0):
-        self.listA = listA
-        self.listB = listB
+    def __init__(self, list1, list2, pValLimit, foldCLimit, noteLimit=0):
+        self.list1 = list1
+        self.list2 = list2
 
         if not pValLimit == "":
             self.pValLimit = float(pValLimit)
@@ -61,12 +61,38 @@ class ListComparator:
         except:
             return False
 
-    def getDiffListB(self):
-        retComp = []
-        with open(self.listB, newline="") as fListB:
-            rListB = csv.reader(fListB, delimiter=";")
+    def getFilterListA(self):
+        listToUse = []
+        if self.list1 is None and self.list2 is not None:
+            listToUse = self.list2
+        elif self.list1 is not None and self.list2 is None:
+            listToUse = self.list1
 
-            rowsB = [row for row in rListB]
+        retComp = []
+        with open(listToUse, newline="") as flistA:
+            rlistA = csv.reader(flistA, delimiter=";")
+
+            rowsA = [row for row in rlistA]
+
+            for rowA in rowsA[1:]:
+                note = int(self.calculNote(rowA))
+                if note >= self.noteLimit:
+                    retComp.append([rowA[0], "", "", "", note])
+
+        return retComp
+
+    def getFilterListB(self):
+        listToUse = []
+        if self.list1 is None and self.list2 is not None:
+            listToUse = self.list2
+        elif self.list1 is not None and self.list2 is None:
+            listToUse = self.list1
+
+        retComp = []
+        with open(listToUse, newline="") as flistB:
+            rlistB = csv.reader(flistB, delimiter=";")
+
+            rowsB = [row for row in rlistB]
 
             for rowB in rowsB[1:]:
                 if self.isGreaterthanFoldC(rowB[1].replace(",", ".")) and self.isLessThanPValue(rowB[2].replace(",", ".")):
@@ -74,14 +100,14 @@ class ListComparator:
         
         return retComp
 
-    def getDiff (self):
+    def getDiffAandB (self):
         retComp = []
-        with open(self.listA, newline="") as fListA, open(self.listB, newline="") as fListB:
-            rListA = csv.reader(fListA, delimiter=",")
-            rListB = csv.reader(fListB, delimiter=";")
+        with open(self.list1, newline="") as flist1, open(self.list2, newline="") as flist2:
+            rlist1 = csv.reader(flist1, delimiter=";")
+            rlist2 = csv.reader(flist2, delimiter=";")
 
-            rowsA = [row for row in rListA]
-            rowsB = [row for row in rListB]
+            rowsA = [row for row in rlist1]
+            rowsB = [row for row in rlist2]
 
             for rowA in rowsA[1:]:
                 for rowB in rowsB[1:]:
@@ -92,3 +118,40 @@ class ListComparator:
 
                         retComp.append([rowA[0], rowB[0], rowB[1], rowB[2], note])
         return retComp
+
+    def getDiffAandA(self):
+        retComp = []
+        with open(self.list1, newline="") as flist1, open(self.list2, newline="") as flist2:
+            rlist1 = csv.reader(flist1, delimiter=";")
+            rlist2 = csv.reader(flist2, delimiter=";")
+
+            rowsA = [row for row in rlist1]
+            rowsAbis = [row for row in rlist2]
+
+            for rowA in rowsA[1:]:
+                for rowAbis in rowsAbis[1:]:
+                    note = self.calculNote(rowA)
+                    if (rowA[0][0:self.getFindDash(rowA)] == rowAbis[0][0:self.getFindDash(rowAbis)]) and \
+                        int(note) >= self.noteLimit:
+
+                        retComp.append([rowA[0], rowAbis[0], "", "", note])
+        return retComp
+
+    def getDiffBandB(self):
+        retComp = []
+        with open(self.list1, newline="") as flist1, open(self.list2, newline="") as flist2:
+            rlist1 = csv.reader(flist1, delimiter=";")
+            rlist2 = csv.reader(flist2, delimiter=";")
+
+            rowsB = [row for row in rlist1]
+            rowsBbis = [row for row in rlist2]
+
+            for rowB in rowsB[1:]:
+                for rowBbis in rowsBbis[1:]:
+                    if (rowB[0][0:self.getFindDash(rowB)] == rowBbis[0][0:self.getFindDash(rowBbis)]) and \
+                        self.isGreaterthanFoldC(rowB[1].replace(",", ".")) and \
+                        self.isLessThanPValue(rowB[2].replace(",", ".")):
+
+                        retComp.append([rowB[0], rowBbis[0], rowB[1], rowB[2], ""])
+        return retComp
+
