@@ -1,4 +1,4 @@
-from tkinter import Tk, Text, Frame, Toplevel, LabelFrame, Label, Entry, Button
+from tkinter import Tk, Text, Frame, Toplevel, LabelFrame, Label, Entry, Button, Menubutton
 from tkinter import LEFT, RIGHT, BOTTOM, TOP, VERTICAL, X, Y, INSERT, END, DISABLED, NORMAL, FALSE
 from tkinter.ttk import Treeview, Scrollbar
 from tkinter.filedialog import askopenfilename, asksaveasfilename
@@ -43,29 +43,29 @@ class BioInfo(Tk):
         self.frameForms = Frame(self)
         self.frameForms.pack(side=LEFT, padx=20)
 
-        #Liste A selection
-        self.frameListA = Frame(self.frameLists)
-        self.frameListA.pack()
+        #Liste n°1 selection
+        self.frameList1 = Frame(self.frameLists)
+        self.frameList1.pack()
         
-        Label(self.frameListA, text="Liste A : ").pack(side=LEFT)
+        Label(self.frameList1, text="Liste n°1 : ").pack(side=LEFT)
 
-        self.entryListA = Entry(self.frameListA, width=30)
-        self.entryListA.pack(side=LEFT)
+        self.entrylist1 = Entry(self.frameList1, width=30)
+        self.entrylist1.pack(side=LEFT)
 
-        self.buttonListA = Button(self.frameListA, text="Parcourir", command=self.load_fileListA, width=10)
-        self.buttonListA.pack(side=LEFT, padx=5)
+        self.buttonlist1 = Button(self.frameList1, text="Parcourir", command=self.load_fileList1, width=10)
+        self.buttonlist1.pack(side=LEFT, padx=5)
 
-        # List B selection
-        self.frameListB = Frame(self.frameLists)
-        self.frameListB.pack(side=BOTTOM)
+        # List n°2 selection
+        self.frameList2 = Frame(self.frameLists)
+        self.frameList2.pack(side=BOTTOM)
 
-        Label(self.frameListB, text="Liste B : ").pack(side=LEFT)
+        Label(self.frameList2, text="Liste n°2 : ").pack(side=LEFT)
 
-        self.entryListB = Entry(self.frameListB, width=30)
-        self.entryListB.pack(side=LEFT)
+        self.entrylist2 = Entry(self.frameList2, width=30)
+        self.entrylist2.pack(side=LEFT)
 
-        self.buttonListB = Button(self.frameListB, text="Parcourir", command=self.load_fileListB, width=10)
-        self.buttonListB.pack(side=LEFT, padx=5)
+        self.buttonlist2 = Button(self.frameList2, text="Parcourir", command=self.load_fileList2, width=10)
+        self.buttonlist2.pack(side=LEFT, padx=5)
 
         # Form pValue
         self.framePVal = Frame(self.frameForms)
@@ -104,25 +104,25 @@ class BioInfo(Tk):
         self.buttonReset.pack(fill= X, expand="yes", padx=20, pady=(0,10))
 
         # file members
-        self.listA = None
-        self.listB = None
+        self.list1 = None
+        self.list2 = None
 
-    def load_fileListA(self):
+    def load_fileList1(self):
         fname = askopenfilename(filetypes=(("CSV files", "*.csv"),
                                            ("All files", "*.*") ))
         if fname:
-            self.entryListA.delete(0, END)
-            self.listA = fname
-            self.entryListA.insert(0,fname)
+            self.entrylist1.delete(0, END)
+            self.list1 = fname
+            self.entrylist1.insert(0,fname)
 
 
-    def load_fileListB(self):
+    def load_fileList2(self):
         fname = askopenfilename(filetypes=(("CSV files", "*.csv"),
                                            ("All files", "*.*") ))
         if fname:
-            self.entryListB.delete(0, END)
-            self.listB = fname
-            self.entryListB.insert(0,fname)
+            self.entrylist2.delete(0, END)
+            self.list2 = fname
+            self.entrylist2.insert(0,fname)
 
             self.buttonComparer.config(state=NORMAL)
 
@@ -135,11 +135,11 @@ class BioInfo(Tk):
             self.tree.delete(i)
 
     def reset(self):
-        self.listA = None
-        self.entryListA.delete(0, END)
+        self.list1 = None
+        self.entrylist1.delete(0, END)
 
-        self.listB = None
-        self.entryListB.delete(0, END)
+        self.list2 = None
+        self.entrylist2.delete(0, END)
 
         self.entryPVal.delete(0,END)
         self.entryFoldC.delete(0, END)
@@ -186,12 +186,12 @@ class BioInfo(Tk):
         elif not self.isValidNote(self.entryNote.get()) and not self.entryNote.get() == "":
             showerror("Erreur : note", "La valeur note n'est pas un nombre entier")
 
-        elif self.listA is None and self.listB is not None:
+        elif self.list1 is None and self.list2 is not None:
             self.resetTree()
 
             try:
-                listComp = ListComparator(self.listA, self.listB, self.entryPVal.get(), self.entryFoldC.get())
-                for e in listComp.getDiffListB():
+                listComp = ListComparator(self.list1, self.list2, self.entryPVal.get(), self.entryFoldC.get())
+                for e in listComp.getDifflist2():
                     self.tree.insert('', 'end', values=e)
             
             except IndexError:
@@ -201,7 +201,7 @@ class BioInfo(Tk):
             self.resetTree()
 
             try:
-                listComp = ListComparator(self.listA, self.listB, self.entryPVal.get(), self.entryFoldC.get(), self.entryNote.get())
+                listComp = ListComparator(self.list1, self.list2, self.entryPVal.get(), self.entryFoldC.get(), self.entryNote.get())
                 for e in listComp.getDiff():
                     self.tree.insert('', 'end', values=e)
 
@@ -217,7 +217,7 @@ class BioInfo(Tk):
         fname = asksaveasfilename(filetypes=(("CSV files", "*.csv"),
                                              ("All files", "*.*") ))
 
-        if  fname:
+        if fname:
             resExp = []
             for it in self.tree.get_children():
                 resExp.append(self.tree.item(it)["values"])
